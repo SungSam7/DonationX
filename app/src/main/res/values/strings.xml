@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">DonationX</string>
+    <string name="app_name">Vote Marge No.1</string>
     <string name="donateTitle">Welcome to Marge\'s Donation System</string>
     <string name="donateSubtitle">Thank you so much for your donation!</string>
     <string name="donateButton">Donate</string>

@@ -19,6 +19,7 @@ class Donate : AppCompatActivity() {
 
     private lateinit var donateLayout : ActivityDonateBinding
     lateinit var app: DonationXApp
+    var totalDonated = 0
 
     private val rotateOpen: Animation by lazy { AnimationUtils.loadAnimation(this, R.anim.rotate_open_anim)}
     private val rotateClose: Animation by lazy { AnimationUtils.loadAnimation(this, R.anim.rotate_close_anim)}
@@ -29,7 +30,7 @@ class Donate : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        donateLayout= ActivityDonateBinding.inflate(layoutInflater)
+        donateLayout = ActivityDonateBinding.inflate(layoutInflater)
         setContentView(donateLayout.root)
 
         app = this.application as DonationXApp
@@ -42,35 +43,49 @@ class Donate : AppCompatActivity() {
             donateLayout.paymentAmount.setText("$newVal")
         }
 
-        var totalDonated = 0
-
-        donateLayout.donateButton.setOnClickListener {
-            val amount = if (donateLayout.paymentAmount.text.isNotEmpty())
-                donateLayout.paymentAmount.text.toString().toInt() else donateLayout.amountPicker.value
-            if(totalDonated >= donateLayout.progressBar.max)
-                Toast.makeText(applicationContext,"Donate Amount Exceeded!", Toast.LENGTH_LONG).show()
-            else {
-                val paymentmethod = if(donateLayout.paymentMethod.checkedRadioButtonId == R.id.Direct)
-                    "Direct" else "Paypal"
-                totalDonated += amount
-                donateLayout.totalSoFar.text = "$$totalDonated"
-                donateLayout.progressBar.progress = totalDonated
-                app.donationsStore.create(DonationModel(paymentmethod = paymentmethod,amount = amount))
-                Timber.i("Total Donated so far $totalDonated")
-            }
-        }
-
-
         donateLayout.addBtn.setOnClickListener{
             onAddButtonClicked()
         }
 
         donateLayout.donationsBtn.setOnClickListener {
             val  intent  = Intent(this, Report::class.java)
-        startActivity(intent)}
+            startActivity(intent)}
 
-       // donateLayout.imageBtn.setOnClickListener { Toast.makeText(this, "Image Button Clicked", Toast.LENGTH_SHORT).show() }
+
+
+        donateLayout.donateButton.setOnClickListener {
+            val amount = if (donateLayout.paymentAmount.text.isNotEmpty())
+                donateLayout.paymentAmount.text.toString()
+                    .toInt() else donateLayout.amountPicker.value
+            if (totalDonated >= donateLayout.progressBar.max)
+                Toast.makeText(applicationContext, "Donate Amount Exceeded!", Toast.LENGTH_LONG)
+                    .show()
+            else {
+                val paymentmethod =
+                    if (donateLayout.paymentMethod.checkedRadioButtonId == R.id.Direct)
+                        "Direct" else "Paypal"
+                totalDonated += amount
+                donateLayout.totalSoFar.text = "$$totalDonated"
+                donateLayout.progressBar.progress = totalDonated
+                app.donationsStore.create(
+                    DonationModel(
+                        paymentmethod = paymentmethod,
+                        amount = amount
+                    )
+                )
+                Timber.i("Total Donated so far $totalDonated")
+            }
+        }
     }
+
+    override fun onResume() {
+        super.onResume()
+        totalDonated = app.donationsStore.findAll().sumOf { it.amount }
+        donateLayout.progressBar.progress = totalDonated
+        donateLayout.totalSoFar.text = "$$totalDonated"
+    }
+
+
 
 //    //for the drop down menu
 //    override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -89,6 +104,13 @@ class Donate : AppCompatActivity() {
 //            else -> super.onOptionsItemSelected(item)
 //        }
 //    }
+
+
+
+        // donateLayout.imageBtn.setOnClickListener { Toast.makeText(this, "Image Button Clicked", Toast.LENGTH_SHORT).show() }
+
+
+
 
 
 

@@ -82,12 +82,10 @@ class Report : AppCompatActivity() {
     private fun setAnimation(clicked: Boolean) {
         if(!clicked){
             reportLayout.donateBtn.visibility = View.VISIBLE
-
         }
         else
         {
             reportLayout.donateBtn.visibility = View.INVISIBLE
-
         }
     }
 
