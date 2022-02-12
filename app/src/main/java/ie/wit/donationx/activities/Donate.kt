@@ -1,17 +1,24 @@
 package ie.wit.donationx.activities
 
+import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.view.Menu
+import android.view.MenuItem
 import android.view.View
 import android.view.animation.Animation
 import android.view.animation.AnimationUtils
 import android.widget.Toast
 import ie.wit.donationx.R
 import ie.wit.donationx.databinding.ActivityDonateBinding
+import ie.wit.donationx.main.DonationXApp
+import ie.wit.donationx.models.DonationModel
+import timber.log.Timber
 
 class Donate : AppCompatActivity() {
 
-    private lateinit var binding: ActivityDonateBinding
+    private lateinit var donateLayout : ActivityDonateBinding
+    lateinit var app: DonationXApp
 
     private val rotateOpen: Animation by lazy { AnimationUtils.loadAnimation(this, R.anim.rotate_open_anim)}
     private val rotateClose: Animation by lazy { AnimationUtils.loadAnimation(this, R.anim.rotate_close_anim)}
@@ -22,58 +29,103 @@ class Donate : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityDonateBinding.inflate(layoutInflater)
-        setContentView(binding.root)
+        donateLayout= ActivityDonateBinding.inflate(layoutInflater)
+        setContentView(donateLayout.root)
 
+        app = this.application as DonationXApp
 
-        binding.addBtn.setOnClickListener{
-            onAddButtonClicked()
-
+        donateLayout.progressBar.max = 10000
+        donateLayout.amountPicker.minValue = 1
+        donateLayout.amountPicker.maxValue = 1000
+        donateLayout.amountPicker.setOnValueChangedListener { _, _, newVal ->
+            //Display the newly selected number to paymentAmount
+            donateLayout.paymentAmount.setText("$newVal")
         }
 
-        binding.editBtn.setOnClickListener { Toast.makeText(this, "Edit Button Clicked", Toast.LENGTH_SHORT).show() }
+        var totalDonated = 0
 
-        binding.imageBtn.setOnClickListener { Toast.makeText(this, "Image Button Clicked", Toast.LENGTH_SHORT).show() }
+        donateLayout.donateButton.setOnClickListener {
+            val amount = if (donateLayout.paymentAmount.text.isNotEmpty())
+                donateLayout.paymentAmount.text.toString().toInt() else donateLayout.amountPicker.value
+            if(totalDonated >= donateLayout.progressBar.max)
+                Toast.makeText(applicationContext,"Donate Amount Exceeded!", Toast.LENGTH_LONG).show()
+            else {
+                val paymentmethod = if(donateLayout.paymentMethod.checkedRadioButtonId == R.id.Direct)
+                    "Direct" else "Paypal"
+                totalDonated += amount
+                donateLayout.totalSoFar.text = "$$totalDonated"
+                donateLayout.progressBar.progress = totalDonated
+                app.donationsStore.create(DonationModel(paymentmethod = paymentmethod,amount = amount))
+                Timber.i("Total Donated so far $totalDonated")
+            }
+        }
 
 
+        donateLayout.addBtn.setOnClickListener{
+            onAddButtonClicked()
+        }
 
+        donateLayout.donationsBtn.setOnClickListener {
+            val  intent  = Intent(this, Report::class.java)
+        startActivity(intent)}
 
+       // donateLayout.imageBtn.setOnClickListener { Toast.makeText(this, "Image Button Clicked", Toast.LENGTH_SHORT).show() }
     }
 
+//    //for the drop down menu
+//    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+//        // Inflate the menu; this adds items to the action bar if it is present.
+//        menuInflater.inflate(R.menu.menu_donate, menu)
+//        return true
+//    }
+//    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+//        // Handle action bar item clicks here. The action bar will
+//        // automatically handle clicks on the Home/Up button, so long
+//        // as you specify a parent activity in AndroidManifest.xml.
+//        return when (item.itemId) {
+//            R.id.action_report -> { startActivity(Intent(this, Report::class.java))
+//                true
+//            }
+//            else -> super.onOptionsItemSelected(item)
+//        }
+//    }
+
+
+
+    //The EFAB code starts here
     private fun onAddButtonClicked() {
         setVisibility(clicked)
         setAnimation(clicked)
         clicked = !clicked
-
-
     }
 
     private fun setAnimation(clicked: Boolean) {
         if(!clicked){
-            binding.editBtn.visibility = View.VISIBLE
-            binding.imageBtn.visibility = View.VISIBLE
+            donateLayout.donationsBtn.visibility = View.VISIBLE
+            //donateLayout.imageBtn.visibility = View.VISIBLE
         }
         else
         {
-            binding.editBtn.visibility = View.INVISIBLE
-            binding.imageBtn.visibility = View.INVISIBLE
+            donateLayout.donationsBtn.visibility = View.INVISIBLE
+           // donateLayout.imageBtn.visibility = View.INVISIBLE
         }
     }
 
     private fun setVisibility(clicked: Boolean) {
         if(!clicked)
         {
-            binding.editBtn.startAnimation(fromBottom)
-            binding.imageBtn.startAnimation(fromBottom)
-            binding.addBtn.startAnimation(rotateOpen)
+            donateLayout.donationsBtn.startAnimation(fromBottom)
+            //donateLayout.imageBtn.startAnimation(fromBottom)
+            donateLayout.addBtn.startAnimation(rotateOpen)
         }
         else
         {
-            binding.editBtn.startAnimation(toBottom)
-            binding.imageBtn.startAnimation(toBottom)
-            binding.addBtn.startAnimation(rotateClose)
+            donateLayout.donationsBtn.startAnimation(toBottom)
+           // donateLayout.imageBtn.startAnimation(toBottom)
+            donateLayout.addBtn.startAnimation(rotateClose)
         }
     }
+    //EFAB code ends here
 }
 
 
